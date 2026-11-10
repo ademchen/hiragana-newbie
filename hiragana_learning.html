@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日文五十音互動學習系統</title>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 24px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-top: 0;
+            font-size: 1.8rem;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* 五十音表格樣式 */
+        .kana-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .kana-card {
+            background: #f1f5f9;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .kana-card:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+
+        .kana-char {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-main);
+            display: block;
+        }
+
+        .kana-romaji {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            display: block;
+        }
+
+        /* 測驗區樣式 */
+        .quiz-box {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .quiz-prompt {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 20px 0;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .option-btn {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1.2rem;
+            padding: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary-color);
+            background: #fdf4ff;
+        }
+
+        .quiz-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .action-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .result-container {
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .kana-grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 6px;
+            }
+            .kana-card {
+                padding: 8px 4px;
+            }
+            .kana-char {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🇯🇵 日文五十音互動學習</h1>
+
+        <!-- 導覽頁籤 -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('chart')">五十音對照表</button>
+            <button class="tab-btn" onclick="switchTab('quiz')">隨堂測驗挑戰</button>
+        </div>
+
+        <!-- 區塊一：五十音對照表 -->
+        <div id="chart-section" class="section active">
+            <div style="margin-bottom: 12px; display: flex; gap: 8px; justify-content: center;">
+                <button class="action-btn" id="toggle-type-btn" onclick="toggleKanaType()" style="margin: 0; padding: 6px 14px; font-size: 0.9rem;">切換為片假名</button>
+            </div>
+            <div id="chart-grid" class="kana-grid"></div>
+        </div>
+
+        <!-- 區塊二：隨堂測驗 -->
+        <div id="quiz-section" class="section">
+            <div class="quiz-stats">
+                <span>目前得分: <span id="score-val">0</span></span>
+                <span>剩餘題數: <span id="left-val">10</span></span>
+            </div>
+
+            <div class="quiz-box">
+                <p id="quiz-instruction" style="color: var(--text-muted);">請選出以下羅馬拼音對應的字元：</p>
+                <div id="quiz-target" class="quiz-prompt">a</div>
+                <div id="options-container" class="options-grid"></div>
+            </div>
+
+            <div id="result-box" class="result-container" style="display: none;">
+                <h2>測驗結束！</h2>
+                <p>你的最終得分是：<span id="final-score" style="font-weight: bold; color: var(--primary-color);">0</span> / 10</p>
+                <button class="action-btn" onclick="startQuiz()">再測驗一次</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 五十音資料庫
+        const kanaData = [
+            { h: "あ", k: "ア", r: "a" }, { h: "い", k: "イ", r: "i" }, { h: "う", k: "ウ", r: "u" }, { h: "え", k: "エ", r: "e" }, { h: "お", k: "オ", r: "o" },
+            { h: "か", k: "カ", r: "ka" }, { h: "き", k: "キ", r: "ki" }, { h: "く", k: "ク", r: "ku" }, { h: "け", k: "ケ", r: "ke" }, { h: "こ", k: "コ", r: "ko" },
+            { h: "さ", k: "サ", r: "sa" }, { h: "し", k: "シ", r: "shi" }, { h: "す", k: "ス", r: "su" }, { h: "せ", k: "セ", r: "se" }, { h: "そ", k: "ソ", r: "so" },
+            { h: "た", k: "タ", r: "ta" }, { h: "ち", k: "チ", r: "chi" }, { h: "つ", k: "ツ", r: "tsu" }, { h: "て", k: "テ", r: "te" }, { h: "と", k: "ト", r: "to" },
+            { h: "な", k: "ナ", r: "na" }, { h: "に", k: "ニ", r: "ni" }, { h: "ぬ", k: "ヌ", r: "nu" }, { h: "ね", k: "ネ", r: "ne" }, { h: "の", k: "ノ", r: "no" },
+            { h: "は", k: "ハ", r: "ha" }, { h: "ひ", k: "ヒ", r: "hi" }, { h: "ふ", k: "フ", r: "fu" }, { h: "へ", k: "ヘ", r: "he" }, { h: "ほ", k: "ホ", r: "ho" },
+            { h: "ま", k: "マ", r: "ma" }, { h: "み", k: "ミ", r: "mi" }, { h: "む", k: "ム", r: "mu" }, { h: "め", k: "メ", r: "me" }, { h: "も", k: "モ", r: "mo" },
+            { h: "や", k: "ヤ", r: "ya" }, { h: "ゆ", k: "ユ", r: "yu" }, { h: "よ", k: "ヨ", r: "yo" },
+            { h: "ら", k: "ラ", r: "ra" }, { h: "り", k: "リ", r: "ri" }, { h: "る", k: "ル", r: "ru" }, { h: "れ", k: "レ", r: "re" }, { h: "ろ", k: "ロ", r: "ro" },
+            { h: "わ", k: "ワ", r: "wa" }, { h: "を", k: "ヲ", r: "wo" },
+            { h: "ん", k: "ン", r: "n" }
+        ];
+
+        let currentShowKatakana = false; // false = 平假名, true = 片假名
+
+        // 頁籤切換
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+
+            if (tabName === 'chart') {
+                document.querySelector('.tabs button:nth-child(1)').classList.add('active');
+                document.getElementById('chart-section').classList.add('active');
+                renderChart();
+            } else {
+                document.querySelector('.tabs button:nth-child(2)').classList.add('active');
+                document.getElementById('quiz-section').classList.add('active');
+                startQuiz();
+            }
+        }
+
+        // 渲染五十音表
+        function renderChart() {
+            const grid = document.getElementById('chart-grid');
+            grid.innerHTML = '';
+            const btn = document.getElementById('toggle-type-btn');
+            btn.innerText = currentShowKatakana ? "切換為平假名" : "切換為片假名";
+
+            kanaData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'kana-card';
+                const char = currentShowKatakana ? item.k : item.h;
+                card.innerHTML = `
+                    <span class="kana-char">${char}</span>
+                    <span class="kana-romaji">${item.r}</span>
+                `;
+                // 點擊可以發音
+                card.onclick = () => speakJapanese(char);
+                grid.appendChild(card);
+            });
+        }
+
+        function toggleKanaType() {
+            currentShowKatakana = !currentShowKatakana;
+            renderChart();
+        }
+
+        // 瀏覽器內建語音朗讀日文（已調整為優先尋找女聲）
+        function speakJapanese(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ja-JP';
+                
+                let voices = window.speechSynthesis.getVoices();
+                let japaneseVoices = voices.filter(voice => voice.lang === 'ja-JP' || voice.lang === 'ja_JP');
+                
+                if (japaneseVoices.length > 0) {
+                    let selectedVoice = japaneseVoices.find(voice => 
+                        voice.name.includes('Kyoko') || 
+                        voice.name.includes('Google 日本語') || 
+                        voice.name.includes('Nanami') ||
+                        voice.name.includes('Female')
+                    );
+                    
+                    if (!selectedVoice) {
+                        selectedVoice = japaneseVoices.length > 1 ? japaneseVoices[1] : japaneseVoices[0];
+                    }
+                    
+                    utterance.voice = selectedVoice;
+                }
+                
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 預先載入語音清單
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                window.speechSynthesis.getVoices();
+            };
+        }
+
+        // 測驗相關變數
+        let quizList = [];
+        let currentIndex = 0;
+        let score = 0;
+        const totalQuestions = 10;
+
+        function startQuiz() {
+            score = 0;
+            currentIndex = 0;
+            document.getElementById('result-box').style.display = 'none';
+            document.querySelector('.quiz-box').style.display = 'block';
+            
+            // 隨機抽 10 題
+            quizList = [...kanaData].sort(() => 0.5 - Math.random()).slice(0, totalQuestions);
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            if (currentIndex >= totalQuestions) {
+                document.querySelector('.quiz-box').style.display = 'none';
+                document.getElementById('result-box').style.display = 'block';
+                document.getElementById('final-score').innerText = score;
+                return;
+            }
+
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('left-val').innerText = totalQuestions - currentIndex;
+
+            const currentItem = quizList[currentIndex];
+            const isReverse = Math.random() > 0.5;
+            const targetDisplay = isReverse ? currentItem.r : currentItem.h;
+            const promptText = isReverse ? "請選出對應的平假名：" : "請選出此發音的平假名：";
+            
+            document.getElementById('quiz-instruction').innerText = promptText;
+            document.getElementById('quiz-target').innerText = targetDisplay;
+
+            // 產生 4 個選項
+            let options = [currentItem];
+            while (options.length < 4) {
+                const randomItem = kanaData[Math.floor(Math.random() * kanaData.length)];
+                if (!options.some(o => o.r === randomItem.r)) {
+                    options.push(randomItem);
+                }
+            }
+            options.sort(() => 0.5 - Math.random());
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = isReverse ? opt.h : opt.r;
+                btn.onclick = () => {
+                    if (isReverse ? (opt.h === currentItem.h) : (opt.r === currentItem.r)) {
+                        score += 1;
+                        btn.style.borderColor = '#10b981';
+                        btn.style.background = '#ecfdf5';
+                    } else {
+                        btn.style.borderColor = '#ef4444';
+                        btn.style.background = '#fef2f2';
+                    }
+                    setTimeout(() => {
+                        currentIndex++;
+                        nextQuestion();
+                    }, 400);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // 初始化載入表格
+        renderChart();
+    </script>
+</body>
+</html>
